@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>character.png</file>
+        <file>raindrop1.png</file>
+        <file>Background1.svg</file>
+    </qresource>
+</RCC>
