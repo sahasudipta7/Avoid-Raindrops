@@ -24,6 +24,7 @@ signals:
 private slots:
     void spawnRainDrop();
     void updateGame();
+    void updateGameAngle();
 
 private:
     QGraphicsScene *scene;

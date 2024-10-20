@@ -16,7 +16,7 @@ GameController::GameController(QGraphicsScene *scene, QObject *parent)
     raindropTimer->start(QRandomGenerator::global()->bounded(500, 1500)); // Random spawn interval
 
     gameTimer = new QTimer(this);
-    connect(gameTimer, &QTimer::timeout, this, &GameController::updateGame);
+    connect(gameTimer, &QTimer::timeout, this, &GameController::updateGameAngle);
     gameTimer->start(33); // 30 FPS Refresh Rate, i.e., 1/0.033
 
     emit livesChanged(lives);
@@ -24,7 +24,7 @@ GameController::GameController(QGraphicsScene *scene, QObject *parent)
 }
 
 void GameController::spawnRainDrop(){
-    int rainX = QRandomGenerator::global()->bounded(30, static_cast<int>(scene->width()) - 30);
+    int rainX = QRandomGenerator::global()->bounded(30, static_cast<int>(scene->width()-30));
     Raindrop *raindrop = new Raindrop();
     scene->addItem(raindrop);
     raindrop->setPos(rainX, -10);
@@ -39,6 +39,50 @@ void GameController::updateGame(){
         if (item->type() == Raindrop::Type) {
             Raindrop *raindrop = static_cast<Raindrop *>(item);
             raindrop->moveDown();
+            if(raindrop->y() > scene->height()) {
+                scene->removeItem(raindrop);
+                delete raindrop;
+                score++;
+                if(score > bestScore){
+                    bestScore = score;
+                }
+                emit scoreChanged(score);
+                emit bestScoreChanged(bestScore);
+            }
+        }
+    }
+    checkCollisions();
+}
+
+void GameController::updateGameAngle(){
+    QList<QGraphicsItem *> items = scene->items();
+    for(QGraphicsItem *item : items){
+        if (item->type() == Raindrop::Type) {
+            Raindrop *raindrop = static_cast<Raindrop *>(item);
+            if(raindrop->flag==0){
+                qDebug() << raindrop->flag;
+                double height=scene->height();
+                double iniX=raindrop->x();
+                //qDebug() << iniX;
+                double tanAngle=1;
+                if(iniX!=0){
+                    tanAngle=height/iniX;
+                    if(tanAngle+1<10){
+                        raindrop->fTanAngle = (QRandomGenerator::global()->bounded(static_cast<int>(tanAngle + 1),10)+(QRandomGenerator::global()->bounded(0,100))/100.0); // +1 to include maxAngle
+                    }
+                    else{
+                        raindrop->fTanAngle=100;
+                    }
+                }
+                else{
+                    raindrop->fTanAngle=100;
+                }
+
+
+                qDebug() <<tanAngle <<raindrop->fTanAngle;
+                raindrop->flag=1;
+            }
+            raindrop->moveAtAnAngle(raindrop->fTanAngle);
             if(raindrop->y() > scene->height()) {
                 scene->removeItem(raindrop);
                 delete raindrop;
